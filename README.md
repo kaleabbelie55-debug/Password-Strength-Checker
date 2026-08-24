@@ -134,7 +134,7 @@ This project currently uses:
 
 Possible future features include:
 
-* [ ] Improve password scoring
+* [did it] Improve password scoring
 * [ ] Add more common-password detection
 * [ ] Add a graphical user interface
 * [ ] Add more automated tests
