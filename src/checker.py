@@ -3,78 +3,132 @@ import re
 
 def check_password(password):
     """
-    Checks the strength of a password.
-
-    Returns:
-        score: A number from 0-100
-        strength: Strength rating
-        feedback: List of suggestions
+    Analyze a password and return:
+    - score (0-100)
+    - strength level
+    - feedback
     """
 
     score = 0
     feedback = []
 
-    # Length
+    # -------------------------
+    # 1. Password Length
+    # -------------------------
+
     length = len(password)
 
     if length >= 16:
         score += 30
     elif length >= 12:
         score += 25
+    elif length >= 10:
+        score += 20
     elif length >= 8:
-        score += 15
+        score += 10
     else:
         feedback.append("Use at least 8 characters.")
 
-    # Uppercase letters
-    if re.search(r"[A-Z]", password):
+    # -------------------------
+    # 2. Character Variety
+    # -------------------------
+
+    has_uppercase = bool(re.search(r"[A-Z]", password))
+    has_lowercase = bool(re.search(r"[a-z]", password))
+    has_number = bool(re.search(r"\d", password))
+    has_special = bool(re.search(r"[^A-Za-z0-9]", password))
+
+    if has_uppercase:
         score += 15
     else:
-        feedback.append("Add at least one uppercase letter.")
+        feedback.append("Add an uppercase letter.")
 
-    # Lowercase letters
-    if re.search(r"[a-z]", password):
+    if has_lowercase:
         score += 15
     else:
-        feedback.append("Add at least one lowercase letter.")
+        feedback.append("Add a lowercase letter.")
 
-    # Numbers
-    if re.search(r"\d", password):
+    if has_number:
         score += 15
     else:
-        feedback.append("Add at least one number.")
+        feedback.append("Add a number.")
 
-    # Special characters
-    if re.search(r"[^A-Za-z0-9]", password):
+    if has_special:
         score += 15
     else:
-        feedback.append("Add a special character such as !, @, #, or $.")
+        feedback.append("Add a special character.")
 
-    # Penalize obvious repeated characters
+    # -------------------------
+    # 3. Repeated Characters
+    # -------------------------
+
     if re.search(r"(.)\1\1", password):
         score -= 10
-        feedback.append("Avoid repeating the same character multiple times.")
+        feedback.append(
+            "Avoid repeating the same character multiple times."
+        )
 
-    # Penalize common passwords
+    # -------------------------
+    # 4. Sequential Characters
+    # -------------------------
+
+    sequences = [
+        "123456789",
+        "abcdefghijklmnopqrstuvwxyz",
+        "qwertyuiop",
+        "asdfghjkl",
+        "zxcvbnm"
+    ]
+
+    password_lower = password.lower()
+
+    for sequence in sequences:
+        for i in range(len(sequence) - 2):
+            if sequence[i:i + 3] in password_lower:
+                score -= 10
+                feedback.append(
+                    "Avoid predictable sequences like abc or 123."
+                )
+                break
+        else:
+            continue
+        break
+
+    # -------------------------
+    # 5. Common Passwords
+    # -------------------------
+
     common_passwords = {
         "password",
         "123456",
         "12345678",
+        "123456789",
         "qwerty",
         "password123",
         "admin",
         "letmein",
-        "welcome"
+        "welcome",
+        "iloveyou",
+        "monkey",
+        "dragon"
     }
 
-    if password.lower() in common_passwords:
-        score = min(score, 20)
-        feedback.append("Avoid common passwords.")
+    if password_lower in common_passwords:
+        score = min(score, 10)
+        feedback.append(
+            "This is a commonly used password."
+        )
 
-    # Keep score between 0 and 100
+    # -------------------------
+    # 6. Prevent Negative Scores
+    # -------------------------
+
     score = max(0, min(score, 100))
 
-    # Determine strength
+    # -------------------------
+    # 7. Determine Strength
+    # -------------------------
+
     if score < 30:
         strength = "Very Weak"
     elif score < 50:
@@ -90,28 +144,31 @@ def check_password(password):
 
 
 def main():
-    print("=" * 40)
-    print("       PASSWORD STRENGTH CHECKER")
-    print("=" * 40)
+    print("=" * 45)
+    print("        🔐 PASSWORD STRENGTH CHECKER")
+    print("=" * 45)
 
-    password = input("Enter a password to check: ")
+    password = input("\nEnter a password to check: ")
 
     score, strength, feedback = check_password(password)
 
-    print("\nResults")
-    print("-" * 40)
+    print("\n" + "-" * 45)
+    print("RESULTS")
+    print("-" * 45)
+
     print(f"Score:    {score}/100")
     print(f"Strength: {strength}")
 
     if feedback:
         print("\nSuggestions:")
-        for item in feedback:
-            print(f"- {item}")
-    else:
-        print("\nGreat! No basic improvements were detected.")
 
-    print("\nYour password was only checked locally.")
-    print("It is not saved or transmitted.")
+        for suggestion in feedback:
+            print(f"  • {suggestion}")
+    else:
+        print("\n✓ No basic improvements detected!")
+
+    print("\nYour password was checked locally.")
+    print("It was not saved or transmitted.")
 
 
 if __name__ == "__main__":
